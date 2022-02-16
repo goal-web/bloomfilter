@@ -26,4 +26,7 @@ func (this *ServiceProvider) Start() error {
 }
 
 func (this *ServiceProvider) Stop() {
+	this.app.Call(func(factory contracts.BloomFactory) {
+		factory.Close()
+	})
 }
