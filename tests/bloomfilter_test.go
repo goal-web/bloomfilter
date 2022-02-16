@@ -19,7 +19,7 @@ func TestFilter(t *testing.T) {
 				"filepath": "/Users/qbhy/project/go/goal-web/bloomfilter/tests/default",
 			},
 		},
-	})
+	}, nil)
 
 	assert.Nil(t, factory.Start())
 	defer factory.Close()
@@ -54,7 +54,7 @@ func BenchmarkFilterAdd(b *testing.B) {
 				"filepath": "/Users/qbhy/project/go/goal-web/bloomfilter/tests/default",
 			},
 		},
-	})
+	}, nil)
 
 	var filter = factory.Filter("default")
 
@@ -82,7 +82,7 @@ func BenchmarkFilterTest(b *testing.B) {
 				"filepath": "/Users/qbhy/project/go/goal-web/bloomfilter/tests/default",
 			},
 		},
-	})
+	}, nil)
 
 	var filter = factory.Filter("default")
 
@@ -110,7 +110,7 @@ func BenchmarkFilterTestAndAddString(b *testing.B) {
 				"filepath": "/Users/qbhy/project/go/goal-web/bloomfilter/tests/default",
 			},
 		},
-	})
+	}, nil)
 
 	var filter = factory.Filter("default")
 
@@ -138,7 +138,7 @@ func BenchmarkFilterTestOrAddString(b *testing.B) {
 				"filepath": "/Users/qbhy/project/go/goal-web/bloomfilter/tests/default",
 			},
 		},
-	})
+	}, nil)
 
 	var filter = factory.Filter("default")
 
@@ -166,7 +166,7 @@ func BenchmarkFilterAddAndTest(b *testing.B) {
 				"filepath": "/Users/qbhy/project/go/goal-web/bloomfilter/tests/default",
 			},
 		},
-	})
+	}, nil)
 
 	var filter = factory.Filter("default")
 

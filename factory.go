@@ -2,21 +2,35 @@ package bloomfilter
 
 import (
 	"errors"
+	"fmt"
 	"github.com/goal-web/bloomfilter/drivers"
 	"github.com/goal-web/contracts"
 	"github.com/goal-web/supports/exceptions"
 	"github.com/goal-web/supports/logs"
 	"github.com/goal-web/supports/utils"
+	"strings"
 	"sync"
 )
 
 var DriverNotDefineErr = errors.New("driver not defined")
 var FilterNotDefineErr = errors.New("filter not defined")
 
-func NewFactory(config Config) contracts.BloomFactory {
+func NewFactory(config Config, redis contracts.RedisFactory) contracts.BloomFactory {
 	return &Factory{
 		drivers: map[string]contracts.BloomFilterDriver{
 			"file": drivers.FileDriver,
+			"redis": func(name string, config contracts.Fields) contracts.BloomFilter {
+				size, k := drivers.EstimateParameters(
+					uint(utils.GetIntField(config, "size", 10000)),
+					utils.GetFloat64Field(config, "k", 1),
+				)
+				return &drivers.Redis{
+					Len:   drivers.Max(size, 1),
+					K:     drivers.Max(k, 1),
+					Key:   strings.ReplaceAll(utils.GetStringField(config, "key", fmt.Sprintf("bloomfilter:%s", name)), "{name}", name),
+					Redis: redis.Connection(utils.GetStringField(config, "connection")),
+				}
+			},
 		},
 		filters: sync.Map{},
 		config:  config,
@@ -70,7 +84,7 @@ func (factory *Factory) Filter(name string) contracts.BloomFilter {
 		panic(DriverNotDefineErr)
 	}
 
-	var filter = factory.drivers[driver](config)
+	var filter = factory.drivers[driver](name, config)
 	factory.filters.Store(name, filter)
 
 	return filter

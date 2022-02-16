@@ -12,14 +12,15 @@ import (
 	"os"
 )
 
-func FileDriver(config contracts.Fields) contracts.BloomFilter {
+func FileDriver(name string, config contracts.Fields) contracts.BloomFilter {
 	size, k := EstimateParameters(
-		uint(utils.GetIntField(config, "size", 0)),
-		utils.GetFloat64Field(config, "k", 0),
+		uint(utils.GetIntField(config, "Len", 0)),
+		utils.GetFloat64Field(config, "K", 0),
 	)
 	return &File{
-		size:     max(size, 1),
-		k:        max(k, 1),
+		name:     name,
+		size:     Max(size, 1),
+		k:        Max(k, 1),
 		bits:     bitset.New(size),
 		filepath: config["filepath"].(string),
 	}
@@ -31,14 +32,14 @@ func EstimateParameters(n uint, p float64) (m uint, k uint) {
 	return
 }
 
-func max(x, y uint) uint {
+func Max(x, y uint) uint {
 	if x > y {
 		return x
 	}
 	return y
 }
 
-// baseHashes returns the four hash values of data that are used to create k
+// baseHashes returns the four hash values of data that are used to create K
 // hashes
 func baseHashes(data []byte) [4]uint64 {
 	var d hash.Digest128 // murmur hashing
@@ -49,6 +50,7 @@ func baseHashes(data []byte) [4]uint64 {
 }
 
 type File struct {
+	name string
 	size uint
 	k    uint
 	bits *bitset.BitSet
@@ -56,10 +58,10 @@ type File struct {
 	filepath string
 }
 
-func (f *File) Add(bytes []byte) {
+func (this *File) Add(bytes []byte) {
 	h := baseHashes(bytes)
-	for i := uint(0); i < f.k; i++ {
-		f.bits.Set(f.location(h, i))
+	for i := uint(0); i < this.k; i++ {
+		this.bits.Set(this.location(h, i))
 	}
 }
 
@@ -70,18 +72,18 @@ func location(h [4]uint64, i uint) uint64 {
 }
 
 // location returns the ith hashed location using the four base hash values
-func (f *File) location(h [4]uint64, i uint) uint {
-	return uint(location(h, i) % uint64(f.size))
+func (this *File) location(h [4]uint64, i uint) uint {
+	return uint(location(h, i) % uint64(this.size))
 }
 
-func (f *File) AddString(str string) {
-	f.Add([]byte(str))
+func (this *File) AddString(str string) {
+	this.Add([]byte(str))
 }
 
-func (f *File) Test(bytes []byte) bool {
+func (this *File) Test(bytes []byte) bool {
 	h := baseHashes(bytes)
-	for i := uint(0); i < f.k; i++ {
-		if !f.bits.Test(f.location(h, i)) {
+	for i := uint(0); i < this.k; i++ {
+		if !this.bits.Test(this.location(h, i)) {
 			return false
 		}
 	}
@@ -90,35 +92,35 @@ func (f *File) Test(bytes []byte) bool {
 
 // TestAndAdd is the equivalent to calling Test(data) then Add(data).
 // Returns the result of Test.
-func (f *File) TestAndAdd(data []byte) bool {
+func (this *File) TestAndAdd(data []byte) bool {
 	present := true
 	h := baseHashes(data)
-	for i := uint(0); i < f.k; i++ {
-		l := f.location(h, i)
-		if !f.bits.Test(l) {
+	for i := uint(0); i < this.k; i++ {
+		l := this.location(h, i)
+		if !this.bits.Test(l) {
 			present = false
 		}
-		f.bits.Set(l)
+		this.bits.Set(l)
 	}
 	return present
 }
 
 // TestAndAddString is the equivalent to calling Test(string) then Add(string).
 // Returns the result of Test.
-func (f *File) TestAndAddString(data string) bool {
-	return f.TestAndAdd([]byte(data))
+func (this *File) TestAndAddString(data string) bool {
+	return this.TestAndAdd([]byte(data))
 }
 
 // TestOrAdd is the equivalent to calling Test(data) then if not present Add(data).
 // Returns the result of Test.
-func (f *File) TestOrAdd(data []byte) bool {
+func (this *File) TestOrAdd(data []byte) bool {
 	present := true
 	h := baseHashes(data)
-	for i := uint(0); i < f.k; i++ {
-		l := f.location(h, i)
-		if !f.bits.Test(l) {
+	for i := uint(0); i < this.k; i++ {
+		l := this.location(h, i)
+		if !this.bits.Test(l) {
 			present = false
-			f.bits.Set(l)
+			this.bits.Set(l)
 		}
 	}
 	return present
@@ -126,34 +128,34 @@ func (f *File) TestOrAdd(data []byte) bool {
 
 // TestOrAddString is the equivalent to calling Test(string) then if not present Add(string).
 // Returns the result of Test.
-func (f *File) TestOrAddString(data string) bool {
-	return f.TestOrAdd([]byte(data))
+func (this *File) TestOrAddString(data string) bool {
+	return this.TestOrAdd([]byte(data))
 }
 
-func (f *File) TestString(str string) bool {
-	return f.Test([]byte(str))
+func (this *File) TestString(str string) bool {
+	return this.Test([]byte(str))
 }
 
-func (f *File) Clear() {
-	f.bits.ClearAll()
+func (this *File) Clear() {
+	this.bits.ClearAll()
 }
 
-func (f *File) Size() uint {
-	return uint(f.bits.BinaryStorageSize())
+func (this *File) Size() uint {
+	return this.size
 }
 
-func (f *File) Count() uint {
-	return f.bits.Count()
+func (this *File) Count() uint {
+	return this.bits.Count()
 }
 
-func (f *File) Load() {
-	file, err := os.Open(f.filepath)
+func (this *File) Load() {
+	file, err := os.Open(this.filepath)
 	if err != nil {
-		logs.WithError(err).Error("File.Load: file open failed")
+		logs.WithError(err).Warn("File.Load: file open failed")
 		return
 	}
 
-	_, err = f.ReadFrom(file)
+	_, err = this.ReadFrom(file)
 
 	if err != nil {
 		logs.WithError(err).Error("File.ReadFrom: file read failed")
@@ -161,14 +163,14 @@ func (f *File) Load() {
 	}
 }
 
-func (f *File) Save() {
-	file, err := os.OpenFile(f.filepath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, os.ModePerm)
+func (this *File) Save() {
+	file, err := os.OpenFile(this.filepath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, os.ModePerm)
 	if err != nil {
 		logs.WithError(err).Error("File.Save: file open failed")
 		return
 	}
 
-	_, err = f.WriteTo(file)
+	_, err = this.WriteTo(file)
 
 	if err != nil {
 		logs.WithError(err).Error("File.WriteTo: file write failed")
@@ -178,23 +180,23 @@ func (f *File) Save() {
 
 // WriteTo writes a binary representation of the BloomFilter to an i/o stream.
 // It returns the number of bytes written.
-func (f *File) WriteTo(stream io.Writer) (int64, error) {
-	err := binary.Write(stream, binary.BigEndian, uint64(f.size))
+func (this *File) WriteTo(stream io.Writer) (int64, error) {
+	err := binary.Write(stream, binary.BigEndian, uint64(this.size))
 	if err != nil {
 		return 0, err
 	}
-	err = binary.Write(stream, binary.BigEndian, uint64(f.k))
+	err = binary.Write(stream, binary.BigEndian, uint64(this.k))
 	if err != nil {
 		return 0, err
 	}
-	numBytes, err := f.bits.WriteTo(stream)
+	numBytes, err := this.bits.WriteTo(stream)
 	return numBytes + int64(2*binary.Size(uint64(0))), err
 }
 
 // ReadFrom reads a binary representation of the BloomFilter (such as might
 // have been written by WriteTo()) from an i/o stream. It returns the number
 // of bytes read.
-func (f *File) ReadFrom(stream io.Reader) (int64, error) {
+func (this *File) ReadFrom(stream io.Reader) (int64, error) {
 	var m, k uint64
 	err := binary.Read(stream, binary.BigEndian, &m)
 	if err != nil {
@@ -209,8 +211,8 @@ func (f *File) ReadFrom(stream io.Reader) (int64, error) {
 	if err != nil {
 		return 0, err
 	}
-	f.size = uint(m)
-	f.k = uint(k)
-	f.bits = b
+	this.size = uint(m)
+	this.k = uint(k)
+	this.bits = b
 	return numBytes + int64(2*binary.Size(uint64(0))), nil
 }

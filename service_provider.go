@@ -10,8 +10,9 @@ type ServiceProvider struct {
 
 func (this *ServiceProvider) Register(application contracts.Application) {
 	this.app = application
-	application.Singleton("bloom.factory", func(config contracts.Config) contracts.BloomFactory {
-		return NewFactory(config.Get("bloomfilter").(Config))
+
+	application.Singleton("bloom.factory", func(config contracts.Config, redis contracts.RedisFactory) contracts.BloomFactory {
+		return NewFactory(config.Get("bloomfilter").(Config), redis)
 	})
 
 	application.Singleton("bloom.filter", func(factory contracts.BloomFactory) contracts.BloomFilter {
