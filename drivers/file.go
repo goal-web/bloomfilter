@@ -1,7 +1,6 @@
 package drivers
 
 import (
-	"bufio"
 	"encoding/binary"
 	"github.com/bits-and-blooms/bitset"
 	"github.com/goal-web/bloomfilter/hash"
@@ -154,7 +153,7 @@ func (f *File) Load() {
 		return
 	}
 
-	_, err = f.ReadFrom(bufio.NewReader(file))
+	_, err = f.ReadFrom(file)
 
 	if err != nil {
 		logs.WithError(err).Error("File.ReadFrom: file read failed")
@@ -169,7 +168,7 @@ func (f *File) Save() {
 		return
 	}
 
-	_, err = f.WriteTo(bufio.NewWriter(file))
+	_, err = f.WriteTo(file)
 
 	if err != nil {
 		logs.WithError(err).Error("File.WriteTo: file write failed")

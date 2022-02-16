@@ -25,12 +25,12 @@ func TestFilter(t *testing.T) {
 	defer factory.Close()
 
 	var filter = factory.Filter("default")
-	//
-	//for i := 0; i < 100; i++ {
-	//	filter.AddString("goal")
-	//}
 
-	assert.True(t, filter.TestString("goal"))
+	for i := 0; i < 100; i++ {
+		//filter.AddString(fmt.Sprintf("goal%d", i))
+		filter.TestString(fmt.Sprintf("goal%d", i))
+	}
+
 	assert.False(t, filter.TestString("1"))
 
 }
