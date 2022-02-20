@@ -151,14 +151,14 @@ func (this *File) Count() uint {
 func (this *File) Load() {
 	file, err := os.Open(this.filepath)
 	if err != nil {
-		logs.WithError(err).Warn("File.Load: file open failed")
+		logs.WithError(err).Debug("bloomfilter.drivers.File.Load: file open failed")
 		return
 	}
 
 	_, err = this.ReadFrom(file)
 
 	if err != nil {
-		logs.WithError(err).Error("File.ReadFrom: file read failed")
+		logs.WithError(err).Debug("bloomfilter.drivers.File.ReadFrom: file read failed")
 		return
 	}
 }
@@ -166,14 +166,14 @@ func (this *File) Load() {
 func (this *File) Save() {
 	file, err := os.OpenFile(this.filepath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, os.ModePerm)
 	if err != nil {
-		logs.WithError(err).Error("File.Save: file open failed")
+		logs.WithError(err).Error("bloomfilter.drivers.File.Save: file open failed")
 		return
 	}
 
 	_, err = this.WriteTo(file)
 
 	if err != nil {
-		logs.WithError(err).Error("File.WriteTo: file write failed")
+		logs.WithError(err).Error("bloomfilter.drivers.File.WriteTo: file write failed")
 		return
 	}
 }
