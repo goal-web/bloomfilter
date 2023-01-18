@@ -4,12 +4,16 @@ import (
 	"github.com/goal-web/contracts"
 )
 
-type ServiceProvider struct {
+type serviceProvider struct {
 	app contracts.Application
 }
 
-func (this *ServiceProvider) Register(application contracts.Application) {
-	this.app = application
+func NewService() contracts.ServiceProvider {
+	return &serviceProvider{}
+}
+
+func (provider *serviceProvider) Register(application contracts.Application) {
+	provider.app = application
 
 	application.Singleton("bloom.factory", func(config contracts.Config, redis contracts.RedisFactory) contracts.BloomFactory {
 		return NewFactory(config.Get("bloomfilter").(Config), redis)
@@ -20,14 +24,14 @@ func (this *ServiceProvider) Register(application contracts.Application) {
 	})
 }
 
-func (this *ServiceProvider) Start() error {
-	return this.app.Call(func(factory contracts.BloomFactory) error {
+func (provider *serviceProvider) Start() error {
+	return provider.app.Call(func(factory contracts.BloomFactory) error {
 		return factory.Start()
 	})[0].(error)
 }
 
-func (this *ServiceProvider) Stop() {
-	this.app.Call(func(factory contracts.BloomFactory) {
+func (provider *serviceProvider) Stop() {
+	provider.app.Call(func(factory contracts.BloomFactory) {
 		factory.Close()
 	})
 }
