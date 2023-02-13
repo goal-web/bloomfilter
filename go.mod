@@ -1,10 +1,10 @@
 module github.com/goal-web/bloomfilter
 
-go 1.17
+go 1.19
 
 require (
 	github.com/bits-and-blooms/bitset v1.2.1
-	github.com/goal-web/contracts v0.1.44
+	github.com/goal-web/contracts v0.1.62
 	github.com/goal-web/supports v0.1.17
 	github.com/stretchr/testify v1.7.0
 )
