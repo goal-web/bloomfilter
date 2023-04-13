@@ -24,10 +24,11 @@ func (provider *serviceProvider) Register(application contracts.Application) {
 	})
 }
 
-func (provider *serviceProvider) Start() error {
-	return provider.app.Call(func(factory contracts.BloomFactory) error {
-		return factory.Start()
-	})[0].(error)
+func (provider *serviceProvider) Start() (err error) {
+	provider.app.Call(func(factory contracts.BloomFactory) {
+		err = factory.Start()
+	})
+	return err
 }
 
 func (provider *serviceProvider) Stop() {

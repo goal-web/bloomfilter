@@ -35,7 +35,8 @@ func TestFilter(t *testing.T) {
 
 }
 
-/**
+/*
+*
 goos: darwin
 goarch: amd64
 pkg: github.com/goal-web/bloomfilter/tests
@@ -63,7 +64,8 @@ func BenchmarkFilterAdd(b *testing.B) {
 	}
 }
 
-/**
+/*
+*
 goos: darwin
 goarch: amd64
 pkg: github.com/goal-web/bloomfilter/tests
@@ -91,7 +93,8 @@ func BenchmarkFilterTest(b *testing.B) {
 	}
 }
 
-/**
+/*
+*
 goos: darwin
 goarch: amd64
 pkg: github.com/goal-web/bloomfilter/tests
@@ -119,7 +122,8 @@ func BenchmarkFilterTestAndAddString(b *testing.B) {
 	}
 }
 
-/**
+/*
+*
 goos: darwin
 goarch: amd64
 pkg: github.com/goal-web/bloomfilter/tests
@@ -147,7 +151,8 @@ func BenchmarkFilterTestOrAddString(b *testing.B) {
 	}
 }
 
-/**
+/*
+*
 goos: darwin
 goarch: amd64
 pkg: github.com/goal-web/bloomfilter/tests

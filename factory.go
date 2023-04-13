@@ -46,7 +46,7 @@ type Factory struct {
 func (factory *Factory) Start() (err error) {
 	defer func() {
 		if panicValue := recover(); panicValue != nil {
-			err = exceptions.WithRecover(err, contracts.Fields{"config": factory.config})
+			err = exceptions.WithRecover(err)
 		}
 	}()
 
