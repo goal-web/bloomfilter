@@ -58,10 +58,10 @@ type File struct {
 	filepath string
 }
 
-func (this *File) Add(bytes []byte) {
+func (driver *File) Add(bytes []byte) {
 	h := baseHashes(bytes)
-	for i := uint(0); i < this.k; i++ {
-		this.bits.Set(this.location(h, i))
+	for i := uint(0); i < driver.k; i++ {
+		driver.bits.Set(driver.location(h, i))
 	}
 }
 
@@ -72,18 +72,18 @@ func location(h [4]uint64, i uint) uint64 {
 }
 
 // location returns the ith hashed location using the four base hash values
-func (this *File) location(h [4]uint64, i uint) uint {
-	return uint(location(h, i) % uint64(this.size))
+func (driver *File) location(h [4]uint64, i uint) uint {
+	return uint(location(h, i) % uint64(driver.size))
 }
 
-func (this *File) AddString(str string) {
-	this.Add([]byte(str))
+func (driver *File) AddString(str string) {
+	driver.Add([]byte(str))
 }
 
-func (this *File) Test(bytes []byte) bool {
+func (driver *File) Test(bytes []byte) bool {
 	h := baseHashes(bytes)
-	for i := uint(0); i < this.k; i++ {
-		if !this.bits.Test(this.location(h, i)) {
+	for i := uint(0); i < driver.k; i++ {
+		if !driver.bits.Test(driver.location(h, i)) {
 			return false
 		}
 	}
@@ -92,35 +92,35 @@ func (this *File) Test(bytes []byte) bool {
 
 // TestAndAdd is the equivalent to calling Test(data) then Add(data).
 // Returns the result of Test.
-func (this *File) TestAndAdd(data []byte) bool {
+func (driver *File) TestAndAdd(data []byte) bool {
 	present := true
 	h := baseHashes(data)
-	for i := uint(0); i < this.k; i++ {
-		l := this.location(h, i)
-		if !this.bits.Test(l) {
+	for i := uint(0); i < driver.k; i++ {
+		l := driver.location(h, i)
+		if !driver.bits.Test(l) {
 			present = false
 		}
-		this.bits.Set(l)
+		driver.bits.Set(l)
 	}
 	return present
 }
 
 // TestAndAddString is the equivalent to calling Test(string) then Add(string).
 // Returns the result of Test.
-func (this *File) TestAndAddString(data string) bool {
-	return this.TestAndAdd([]byte(data))
+func (driver *File) TestAndAddString(data string) bool {
+	return driver.TestAndAdd([]byte(data))
 }
 
 // TestOrAdd is the equivalent to calling Test(data) then if not present Add(data).
 // Returns the result of Test.
-func (this *File) TestOrAdd(data []byte) bool {
+func (driver *File) TestOrAdd(data []byte) bool {
 	present := true
 	h := baseHashes(data)
-	for i := uint(0); i < this.k; i++ {
-		l := this.location(h, i)
-		if !this.bits.Test(l) {
+	for i := uint(0); i < driver.k; i++ {
+		l := driver.location(h, i)
+		if !driver.bits.Test(l) {
 			present = false
-			this.bits.Set(l)
+			driver.bits.Set(l)
 		}
 	}
 	return present
@@ -128,34 +128,34 @@ func (this *File) TestOrAdd(data []byte) bool {
 
 // TestOrAddString is the equivalent to calling Test(string) then if not present Add(string).
 // Returns the result of Test.
-func (this *File) TestOrAddString(data string) bool {
-	return this.TestOrAdd([]byte(data))
+func (driver *File) TestOrAddString(data string) bool {
+	return driver.TestOrAdd([]byte(data))
 }
 
-func (this *File) TestString(str string) bool {
-	return this.Test([]byte(str))
+func (driver *File) TestString(str string) bool {
+	return driver.Test([]byte(str))
 }
 
-func (this *File) Clear() {
-	this.bits.ClearAll()
+func (driver *File) Clear() {
+	driver.bits.ClearAll()
 }
 
-func (this *File) Size() uint {
-	return this.size
+func (driver *File) Size() uint {
+	return driver.size
 }
 
-func (this *File) Count() uint {
-	return this.bits.Count()
+func (driver *File) Count() uint {
+	return driver.bits.Count()
 }
 
-func (this *File) Load() {
-	file, err := os.Open(this.filepath)
+func (driver *File) Load() {
+	file, err := os.Open(driver.filepath)
 	if err != nil {
 		logs.WithError(err).Debug("bloomfilter.drivers.File.Load: file open failed")
 		return
 	}
 
-	_, err = this.ReadFrom(file)
+	_, err = driver.ReadFrom(file)
 
 	if err != nil {
 		logs.WithError(err).Debug("bloomfilter.drivers.File.ReadFrom: file read failed")
@@ -163,14 +163,14 @@ func (this *File) Load() {
 	}
 }
 
-func (this *File) Save() {
-	file, err := os.OpenFile(this.filepath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, os.ModePerm)
+func (driver *File) Save() {
+	file, err := os.OpenFile(driver.filepath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, os.ModePerm)
 	if err != nil {
 		logs.WithError(err).Error("bloomfilter.drivers.File.Save: file open failed")
 		return
 	}
 
-	_, err = this.WriteTo(file)
+	_, err = driver.WriteTo(file)
 
 	if err != nil {
 		logs.WithError(err).Error("bloomfilter.drivers.File.WriteTo: file write failed")
@@ -180,23 +180,23 @@ func (this *File) Save() {
 
 // WriteTo writes a binary representation of the BloomFilter to an i/o stream.
 // It returns the number of bytes written.
-func (this *File) WriteTo(stream io.Writer) (int64, error) {
-	err := binary.Write(stream, binary.BigEndian, uint64(this.size))
+func (driver *File) WriteTo(stream io.Writer) (int64, error) {
+	err := binary.Write(stream, binary.BigEndian, uint64(driver.size))
 	if err != nil {
 		return 0, err
 	}
-	err = binary.Write(stream, binary.BigEndian, uint64(this.k))
+	err = binary.Write(stream, binary.BigEndian, uint64(driver.k))
 	if err != nil {
 		return 0, err
 	}
-	numBytes, err := this.bits.WriteTo(stream)
+	numBytes, err := driver.bits.WriteTo(stream)
 	return numBytes + int64(2*binary.Size(uint64(0))), err
 }
 
 // ReadFrom reads a binary representation of the BloomFilter (such as might
 // have been written by WriteTo()) from an i/o stream. It returns the number
 // of bytes read.
-func (this *File) ReadFrom(stream io.Reader) (int64, error) {
+func (driver *File) ReadFrom(stream io.Reader) (int64, error) {
 	var m, k uint64
 	err := binary.Read(stream, binary.BigEndian, &m)
 	if err != nil {
@@ -211,8 +211,8 @@ func (this *File) ReadFrom(stream io.Reader) (int64, error) {
 	if err != nil {
 		return 0, err
 	}
-	this.size = uint(m)
-	this.k = uint(k)
-	this.bits = b
+	driver.size = uint(m)
+	driver.k = uint(k)
+	driver.bits = b
 	return numBytes + int64(2*binary.Size(uint64(0))), nil
 }

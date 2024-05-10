@@ -50,14 +50,14 @@ func (factory *Factory) Start() (err error) {
 		}
 	}()
 
-	for name, _ := range factory.config.Filters {
+	for name := range factory.config.Filters {
 		factory.Filter(name).Load()
 	}
 	return
 }
 
 func (factory *Factory) Close() {
-	for name, _ := range factory.config.Filters {
+	for name := range factory.config.Filters {
 		factory.Filter(name).Save()
 	}
 }

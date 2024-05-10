@@ -6,9 +6,9 @@ import (
 )
 
 const (
-	c1_128     = 0x87c37b91114253d5
-	c2_128     = 0x4cf5ad432745937f
-	block_size = 16
+	c1128     = 0x87c37b91114253d5
+	c2128     = 0x4cf5ad432745937f
+	blockSize = 16
 )
 
 // Digest128 represents a partial evaluation of a 128 bites hash.
@@ -17,32 +17,32 @@ type Digest128 struct {
 	h2 uint64 // Unfinalized running hash part 2.
 }
 
-//bmix will hash blocks (16 bytes)
+// bmix will hash blocks (16 bytes)
 func (d *Digest128) bmix(p []byte) {
-	nblocks := len(p) / block_size
+	nblocks := len(p) / blockSize
 	for i := 0; i < nblocks; i++ {
-		t := (*[2]uint64)(unsafe.Pointer(&p[i*block_size]))
+		t := (*[2]uint64)(unsafe.Pointer(&p[i*blockSize]))
 		k1, k2 := t[0], t[1]
 		d.bmixWords(k1, k2)
 	}
 }
 
-//bmixWords will hash two 64-bit words (16 bytes)
+// bmixWords will hash two 64-bit words (16 bytes)
 func (d *Digest128) bmixWords(k1, k2 uint64) {
 	h1, h2 := d.h1, d.h2
 
-	k1 *= c1_128
+	k1 *= c1128
 	k1 = bits.RotateLeft64(k1, 31)
-	k1 *= c2_128
+	k1 *= c2128
 	h1 ^= k1
 
 	h1 = bits.RotateLeft64(h1, 27)
 	h1 += h2
 	h1 = h1*5 + 0x52dce729
 
-	k2 *= c2_128
+	k2 *= c2128
 	k2 = bits.RotateLeft64(k2, 33)
-	k2 *= c1_128
+	k2 *= c1128
 	h2 ^= k2
 
 	h2 = bits.RotateLeft64(h2, 31)
@@ -66,58 +66,43 @@ func (d *Digest128) Sum128(pad_tail bool, length uint, tail []byte) (h1, h2 uint
 		switch (len(tail) + 1) & 15 {
 		case 15:
 			k2 ^= uint64(1) << 48
-			break
 		case 14:
 			k2 ^= uint64(1) << 40
-			break
 		case 13:
 			k2 ^= uint64(1) << 32
-			break
 		case 12:
 			k2 ^= uint64(1) << 24
-			break
 		case 11:
 			k2 ^= uint64(1) << 16
-			break
 		case 10:
 			k2 ^= uint64(1) << 8
-			break
 		case 9:
 			k2 ^= uint64(1) << 0
 
-			k2 *= c2_128
+			k2 *= c2128
 			k2 = bits.RotateLeft64(k2, 33)
-			k2 *= c1_128
+			k2 *= c1128
 			h2 ^= k2
-
-			break
 
 		case 8:
 			k1 ^= uint64(1) << 56
-			break
 		case 7:
 			k1 ^= uint64(1) << 48
-			break
 		case 6:
 			k1 ^= uint64(1) << 40
-			break
 		case 5:
 			k1 ^= uint64(1) << 32
-			break
 		case 4:
 			k1 ^= uint64(1) << 24
-			break
 		case 3:
 			k1 ^= uint64(1) << 16
-			break
 		case 2:
 			k1 ^= uint64(1) << 8
-			break
 		case 1:
 			k1 ^= uint64(1) << 0
-			k1 *= c1_128
+			k1 *= c1128
 			k1 = bits.RotateLeft64(k1, 31)
-			k1 *= c2_128
+			k1 *= c2128
 			h1 ^= k1
 		}
 
@@ -144,9 +129,9 @@ func (d *Digest128) Sum128(pad_tail bool, length uint, tail []byte) (h1, h2 uint
 	case 9:
 		k2 ^= uint64(tail[8]) << 0
 
-		k2 *= c2_128
+		k2 *= c2128
 		k2 = bits.RotateLeft64(k2, 33)
-		k2 *= c1_128
+		k2 *= c1128
 		h2 ^= k2
 
 		fallthrough
@@ -174,9 +159,9 @@ func (d *Digest128) Sum128(pad_tail bool, length uint, tail []byte) (h1, h2 uint
 		fallthrough
 	case 1:
 		k1 ^= uint64(tail[0]) << 0
-		k1 *= c1_128
+		k1 *= c1128
 		k1 = bits.RotateLeft64(k1, 31)
-		k1 *= c2_128
+		k1 *= c2128
 		h1 ^= k1
 	}
 
@@ -208,12 +193,14 @@ func fmix64(k uint64) uint64 {
 // It is designed to never allocate memory on the heap. So it
 // works without any byte buffer whatsoever.
 // It is designed to be strictly equivalent to
-// 			a1 := []byte{1}
-//          hasher := murmur3.New128()
-//          hasher.Write(data) // #nosec
-//          v1, v2 := hasher.Sum128()
-//          hasher.Write(a1) // #nosec
-//          v3, v4 := hasher.Sum128()
+//
+//				a1 := []byte{1}
+//	         hasher := murmur3.New128()
+//	         hasher.Write(data) // #nosec
+//	         v1, v2 := hasher.Sum128()
+//	         hasher.Write(a1) // #nosec
+//	         v3, v4 := hasher.Sum128()
+//
 // See TestHashRandom.
 func (d *Digest128) Sum256(data []byte) (hash1, hash2, hash3, hash4 uint64) {
 	// We always start from zero.
@@ -222,12 +209,12 @@ func (d *Digest128) Sum256(data []byte) (hash1, hash2, hash3, hash4 uint64) {
 	d.bmix(data)
 	// We have enough to compute the first two 64-bit numbers
 	length := uint(len(data))
-	tail_length := length % block_size
+	tail_length := length % blockSize
 	tail := data[length-tail_length:]
 	hash1, hash2 = d.Sum128(false, length, tail)
 	// Next we want to 'virtually' append 1 to the input, but,
 	// we do not want to append to an actual array!!!
-	if tail_length+1 == block_size {
+	if tail_length+1 == blockSize {
 		// We are left with no tail!!!
 		// Note that murmur3 is sensitive to endianess and so are we.
 		// We assume a little endian system. Go effectively never run
