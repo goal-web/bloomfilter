@@ -1,6 +1,6 @@
 module github.com/goal-web/bloomfilter
 
-go 1.20
+go 1.23.1
 
 require (
 	github.com/bits-and-blooms/bitset v1.2.1
